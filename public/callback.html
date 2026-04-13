@@ -49,6 +49,67 @@ h1 { font-size: 18px; font-weight: 500; margin-bottom: 4px; }
 </div>
 
 <script>
+const SUPABASE_URL = "https://plucbphvumuxdprajwag.supabase.co";
+const SUPABASE_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBsdWNicGh2dW11eGRwcmFqd2FnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYwODQ3ODUsImV4cCI6MjA5MTY2MDc4NX0.dTjVhlmcklYGUt1mhFv9yIq6tz_wJtMnJRUlNxKoLbk";
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+
+async function init() {
+  const hash = window.location.hash.substring(1);
+  const params = new URLSearchParams(hash);
+  const type = params.get('type');
+  const accessToken = params.get('access_token');
+  const refreshToken = params.get('refresh_token');
+
+  // Invitation ou reset password → afficher formulaire mot de passe
+  if ((type === 'recovery' || type === 'invite') && accessToken) {
+    await sb.auth.setSession({ access_token: accessToken, refresh_token: refreshToken });
+    document.getElementById('loading-view').style.display = 'none';
+    document.getElementById('password-view').style.display = 'block';
+    return;
+  }
+
+  // Connexion normale → rediriger vers coach.html
+  const { data: { session } } = await sb.auth.getSession();
+  if (session) { window.location.href = '/coach.html'; return; }
+  setTimeout(async () => {
+    await sb.auth.getSession();
+    window.location.href = '/coach.html';
+  }, 1500);
+}
+
+async function setPassword() {
+  const pwd1 = document.getElementById('pwd1').value;
+  const pwd2 = document.getElementById('pwd2').value;
+  const msg = document.getElementById('pwd-msg');
+  if (pwd1.length < 8) { msg.innerHTML = '<div class="msg err">Minimum 8 caractères.</div>'; return; }
+  if (pwd1 !== pwd2) { msg.innerHTML = '<div class="msg err">Les mots de passe ne correspondent pas.</div>'; return; }
+  const { error } = await sb.auth.updateUser({ password: pwd1 });
+  if (error) { msg.innerHTML = `<div class="msg err">${error.message}</div>`; return; }
+  msg.innerHTML = '<div class="msg ok">Mot de passe créé. Redirection…</div>';
+  setTimeout(() => { window.location.href = '/coach.html'; }, 1500);
+}
+
+init();
+</script>
+</body>
+</html>
+
+<div id="password-view" class="card" style="display:none">
+  <h1>Créer ton mot de passe</h1>
+  <div class="sub">Choisis un mot de passe pour accéder à Trust.</div>
+  <div class="field">
+    <label>Nouveau mot de passe</label>
+    <input type="password" id="pwd1" placeholder="Min. 8 caractères" />
+  </div>
+  <div class="field">
+    <label>Confirmer le mot de passe</label>
+    <input type="password" id="pwd2" placeholder="Répète ton mot de passe" onkeydown="if(event.key==='Enter')setPassword()" />
+  </div>
+  <button class="btn" onclick="setPassword()">Valider</button>
+  <div id="pwd-msg"></div>
+</div>
+
+<script>
 const SUPABASE_URL = "https://dmpqfzzafvceqgunqxuy.supabase.co";
 const SUPABASE_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRtcHFmenphZnZjZXFndW5xeHV5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYwNTEwNDUsImV4cCI6MjA5MTYyNzA0NX0.ACpxJ2VudPg3jSON8TQVTQoYnhEjNLB9Ui5zg2boK98";
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
