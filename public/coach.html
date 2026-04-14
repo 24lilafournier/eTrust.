@@ -59,6 +59,7 @@ h1 { font-size: 20px; font-weight: 500; margin-bottom: 2px; }
 .proto-field textarea { min-height: 58px; }
 .proto-delete { position: absolute; top: 10px; right: 10px; background: none; border: none; cursor: pointer; color: #aaa; font-size: 16px; padding: 0; line-height: 1; }
 .proto-delete:hover { color: #A32D2D; }
+.proto-badge { display: inline-block; font-size: 10px; padding: 2px 8px; border-radius: 8px; font-weight: 500; margin-left: 6px; background: #F5F0E8; color: #6B1A2A; border: 0.5px solid #D4CFC6; }
 
 /* SUPERVISION */
 .sup-grid { display: grid; grid-template-columns: 1fr 250px; min-height: 500px; }
@@ -270,60 +271,43 @@ function renderConfig() {
   document.getElementById('config-main').innerHTML = `
 <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;padding:4px 0">
 
-  <!-- Colonne gauche -->
   <div>
     <div class="slabel">Contexte client</div>
-
     <div class="cfg">
       <label>Objectif</label>
       <textarea id="cfg-obj" style="font-size:14px;line-height:1.6;min-height:70px;padding:10px 12px;border-radius:10px">${esc(c.objectif)}</textarea>
     </div>
-
     <div class="cfg">
       <label>Blocage principal</label>
       <input type="text" id="cfg-bloc" value="${esc(c.blocage)}" style="font-size:14px;padding:10px 12px;border-radius:10px" />
     </div>
-
     <div class="cfg">
       <label>Cadre de travail</label>
       <textarea id="cfg-cadre" style="font-size:14px;line-height:1.6;min-height:60px;padding:10px 12px;border-radius:10px">${esc(c.cadre)}</textarea>
     </div>
 
     <div class="slabel" style="margin-top:20px">Style du coach</div>
-
-    <div class="cfg">
-      <label>Ton</label>
-      <div class="pills" style="gap:8px">${mkPills('ton',['doux','cadrant','challengeant'])}</div>
-    </div>
-    <div class="cfg">
-      <label>Posture</label>
-      <div class="pills" style="gap:8px">${mkPills('posture',['structurant','empathique','direct'])}</div>
-    </div>
-    <div class="cfg">
-      <label>Priorité</label>
-      <div class="pills" style="gap:8px">${mkPills('priorite',['clarification','action','émotion'])}</div>
-    </div>
-
+    <div class="cfg"><label>Ton</label><div class="pills" style="gap:8px">${mkPills('ton',['doux','cadrant','challengeant'])}</div></div>
+    <div class="cfg"><label>Posture</label><div class="pills" style="gap:8px">${mkPills('posture',['structurant','empathique','direct'])}</div></div>
+    <div class="cfg"><label>Priorité</label><div class="pills" style="gap:8px">${mkPills('priorite',['clarification','action','émotion'])}</div></div>
     <div class="cfg">
       <label>Interdits</label>
       ${mkInt()}
       <input type="text" placeholder="Ajouter un interdit…" style="width:100%;font-size:13px;padding:8px 11px;border:0.5px solid #D4CFC6;border-radius:9px;background:#fff;color:#2C1810;margin-top:4px" onkeydown="if(event.key==='Enter'&&this.value.trim()){addInterdit(this.value.trim());this.value=''}" />
     </div>
-
     <div style="margin-top:16px;display:flex;align-items:center;gap:12px">
       <button class="btn" onclick="saveClient()">Sauvegarder</button>
       <span id="save-msg" style="font-size:13px;color:#0F6E56"></span>
     </div>
   </div>
 
-  <!-- Colonne droite -->
   <div>
     <div class="slabel">Mémoire — Décisions prises</div>
     <div style="margin-bottom:10px">
       ${(c.decisions||[]).map((d,i) => `
         <div style="font-size:13px;padding:7px 0;border-bottom:0.5px solid #eee;display:flex;justify-content:space-between;align-items:center;gap:8px">
           <span style="color:#0F6E56;font-weight:500">✓</span> <span style="flex:1">${esc(d)}</span>
-          <button onclick="removeDecision(${i})" style="background:none;border:none;cursor:pointer;color:#ccc;font-size:14px;line-height:1;padding:0 2px" title="Supprimer">×</button>
+          <button onclick="removeDecision(${i})" style="background:none;border:none;cursor:pointer;color:#ccc;font-size:14px;line-height:1;padding:0 2px">×</button>
         </div>`).join('') || '<div style="font-size:13px;color:#bbb;padding:6px 0">Aucune décision enregistrée</div>'}
     </div>
     <input type="text" placeholder="Nouvelle décision…" style="width:100%;font-size:13px;padding:8px 11px;border:0.5px solid #D4CFC6;border-radius:9px;background:#fff;color:#2C1810;margin-bottom:20px" onkeydown="if(event.key==='Enter'&&this.value.trim()){addDecision(this.value.trim());this.value=''}" />
@@ -333,12 +317,12 @@ function renderConfig() {
       ${(c.patterns||[]).map((p,i) => `
         <div style="font-size:13px;padding:7px 0;border-bottom:0.5px solid #eee;display:flex;justify-content:space-between;align-items:center;gap:8px">
           <span style="color:#6B1A2A;font-weight:500">◆</span> <span style="flex:1">${esc(p)}</span>
-          <button onclick="removePattern(${i})" style="background:none;border:none;cursor:pointer;color:#ccc;font-size:14px;line-height:1;padding:0 2px" title="Supprimer">×</button>
+          <button onclick="removePattern(${i})" style="background:none;border:none;cursor:pointer;color:#ccc;font-size:14px;line-height:1;padding:0 2px">×</button>
         </div>`).join('') || '<div style="font-size:13px;color:#bbb;padding:6px 0">Aucun pattern enregistré</div>'}
     </div>
-    <input type="text" placeholder="Nouveau pattern…" style="width:100%;font-size:13px;padding:8px 11px;border:0.5px solid #D4CFC6;border-radius:9px;background:#fff;color:#2C1810;margin-bottom:4px" onkeydown="if(event.key==='Enter'&&this.value.trim()){addPattern(this.value.trim());this.value=''}" />
+    <input type="text" placeholder="Nouveau pattern…" style="width:100%;font-size:13px;padding:8px 11px;border:0.5px solid #D4CFC6;border-radius:9px;background:#fff;color:#2C1810;margin-bottom:20px" onkeydown="if(event.key==='Enter'&&this.value.trim()){addPattern(this.value.trim());this.value=''}" />
 
-    <div class="slabel" style="margin-top:14px">Lien client (permanent)</div>
+    <div class="slabel">Lien client (permanent)</div>
     <div class="link-box">
       <div class="link-url">${esc(clientUrl)}</div>
       <button class="copy-btn" onclick="copyLink('${esc(clientUrl)}')">Copier</button>
@@ -448,9 +432,7 @@ function addPattern(v) { curClient.patterns = [...(curClient.patterns||[]), v]; 
 function removePattern(i) { curClient.patterns.splice(i,1); renderConfig(); }
 
 function refreshPromptPreview() {
-  // supprimé — aperçu prompt retiré de l'interface
-  return;
-  if (false) { // dead code kept for safety
+  // aperçu prompt supprimé de l'interface
 }
 
 function copyLink(url) {
@@ -561,7 +543,6 @@ function addFeedMsg(role, data) {
     m.innerHTML = `<div class="feed-meta">Client</div>${escHTML(data.content)}`;
   } else {
     m.className = 'feed-msg feed-ai';
-    // Nouveau format texte libre avec [PROTO:x] en fin de message
     const raw = data.content || '';
     const protoMatch = raw.match(/\[PROTO:([\w]+)\]/i);
     const protoKey = (protoMatch ? protoMatch[1] : (data.proto || '')).toLowerCase();
@@ -572,7 +553,6 @@ function addFeedMsg(role, data) {
     const tagLabel = isCustom ? protoKey.toUpperCase() : (PN[protoKey] || '—');
     const tag = `<span class="ptag-sm ${tagClass}">${tagLabel}</span>`;
 
-    // Rendu ligne par ligne : questions en gras, micro-actions en vert
     const lines = text.split('\n').filter(l => l.trim());
     let html = '';
     lines.forEach(line => {
@@ -598,7 +578,7 @@ function escHTML(str) {
   return String(str || '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
 }
 
-// ── PROMPT (avec protocoles custom) ──
+// ── PROMPT ──
 function buildPrompt(coach, client) {
   const protos = coachData?.protocoles_custom || [];
 
