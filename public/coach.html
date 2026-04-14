@@ -44,7 +44,6 @@ h1 { font-size: 20px; font-weight: 500; margin-bottom: 2px; }
 .interdit-list { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 6px; }
 .interdit-tag { font-size: 11px; padding: 3px 8px; border-radius: 10px; background: #FCEBEB; color: #A32D2D; border: 0.5px solid #F09595; display: flex; align-items: center; gap: 4px; }
 .interdit-tag button { background: none; border: none; cursor: pointer; color: #A32D2D; font-size: 12px; padding: 0; }
-.prompt-preview { background: #F5F0E8; border: 0.5px solid #D4CFC6; border-radius: 8px; padding: 12px; font-size: 11px; color: #666; max-height: 180px; overflow-y: auto; white-space: pre-wrap; line-height: 1.6; font-family: monospace; }
 .link-box { display: flex; align-items: center; gap: 8px; background: #EDE8DF; border-radius: 8px; padding: 8px 12px; margin-top: 6px; }
 .link-url { font-size: 12px; font-family: monospace; color: #6B1A2A; flex: 1; word-break: break-all; }
 .copy-btn { padding: 4px 10px; font-size: 11px; background: #6B1A2A; color: #F5F0E8; border: none; border-radius: 6px; cursor: pointer; flex-shrink: 0; }
@@ -60,7 +59,6 @@ h1 { font-size: 20px; font-weight: 500; margin-bottom: 2px; }
 .proto-field textarea { min-height: 58px; }
 .proto-delete { position: absolute; top: 10px; right: 10px; background: none; border: none; cursor: pointer; color: #aaa; font-size: 16px; padding: 0; line-height: 1; }
 .proto-delete:hover { color: #A32D2D; }
-.proto-badge { display: inline-block; font-size: 10px; padding: 2px 8px; border-radius: 8px; font-weight: 500; margin-left: 6px; background: #F5F0E8; color: #6B1A2A; border: 0.5px solid #D4CFC6; }
 
 /* SUPERVISION */
 .sup-grid { display: grid; grid-template-columns: 1fr 250px; min-height: 500px; }
@@ -270,59 +268,83 @@ function renderConfig() {
   const clientUrl = `${BASE_URL}/client.html?c=${c.slug}&t=${c.token || ''}`;
 
   document.getElementById('config-main').innerHTML = `
-<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
-  <div>
-    <div class="slabel">Configuration client</div>
-    <div class="cfg"><label>Objectif client</label><textarea id="cfg-obj">${esc(c.objectif)}</textarea></div>
-    <div class="cfg"><label>Blocage principal</label><input type="text" id="cfg-bloc" value="${esc(c.blocage)}" /></div>
-    <div class="cfg"><label>Cadre</label><textarea id="cfg-cadre">${esc(c.cadre)}</textarea></div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;padding:4px 0">
 
-    <div class="slabel">Profil coach</div>
-    <div class="cfg"><label>Ton</label><div class="pills">${mkPills('ton',['doux','cadrant','challengeant'])}</div></div>
-    <div class="cfg"><label>Posture</label><div class="pills">${mkPills('posture',['structurant','empathique','direct'])}</div></div>
-    <div class="cfg"><label>Priorité</label><div class="pills">${mkPills('priorite',['clarification','action','émotion'])}</div></div>
+  <!-- Colonne gauche -->
+  <div>
+    <div class="slabel">Contexte client</div>
+
+    <div class="cfg">
+      <label>Objectif</label>
+      <textarea id="cfg-obj" style="font-size:14px;line-height:1.6;min-height:70px;padding:10px 12px;border-radius:10px">${esc(c.objectif)}</textarea>
+    </div>
+
+    <div class="cfg">
+      <label>Blocage principal</label>
+      <input type="text" id="cfg-bloc" value="${esc(c.blocage)}" style="font-size:14px;padding:10px 12px;border-radius:10px" />
+    </div>
+
+    <div class="cfg">
+      <label>Cadre de travail</label>
+      <textarea id="cfg-cadre" style="font-size:14px;line-height:1.6;min-height:60px;padding:10px 12px;border-radius:10px">${esc(c.cadre)}</textarea>
+    </div>
+
+    <div class="slabel" style="margin-top:20px">Style du coach</div>
+
+    <div class="cfg">
+      <label>Ton</label>
+      <div class="pills" style="gap:8px">${mkPills('ton',['doux','cadrant','challengeant'])}</div>
+    </div>
+    <div class="cfg">
+      <label>Posture</label>
+      <div class="pills" style="gap:8px">${mkPills('posture',['structurant','empathique','direct'])}</div>
+    </div>
+    <div class="cfg">
+      <label>Priorité</label>
+      <div class="pills" style="gap:8px">${mkPills('priorite',['clarification','action','émotion'])}</div>
+    </div>
+
     <div class="cfg">
       <label>Interdits</label>
       ${mkInt()}
-      <input type="text" placeholder="Ajouter un interdit…" style="width:100%;font-size:12px;padding:5px 8px;border:0.5px solid #D4CFC6;border-radius:8px;background:#fff;color:#2C1810" onkeydown="if(event.key==='Enter'&&this.value.trim()){addInterdit(this.value.trim());this.value=''}" />
+      <input type="text" placeholder="Ajouter un interdit…" style="width:100%;font-size:13px;padding:8px 11px;border:0.5px solid #D4CFC6;border-radius:9px;background:#fff;color:#2C1810;margin-top:4px" onkeydown="if(event.key==='Enter'&&this.value.trim()){addInterdit(this.value.trim());this.value=''}" />
     </div>
 
-    <button class="btn" onclick="saveClient()" style="margin-top:8px">Sauvegarder</button>
-    <span id="save-msg" style="font-size:12px;color:#0F6E56;margin-left:8px"></span>
+    <div style="margin-top:16px;display:flex;align-items:center;gap:12px">
+      <button class="btn" onclick="saveClient()">Sauvegarder</button>
+      <span id="save-msg" style="font-size:13px;color:#0F6E56"></span>
+    </div>
   </div>
 
+  <!-- Colonne droite -->
   <div>
-    <div class="slabel">Mémoire client</div>
-    <div style="font-size:11px;color:#aaa;margin-bottom:5px">Décisions prises</div>
-    ${(c.decisions||[]).map((d,i) => `
-      <div style="font-size:12px;padding:4px 0;border-bottom:0.5px solid #eee;display:flex;justify-content:space-between;align-items:center">
-        ✓ ${esc(d)}
-        <button onclick="removeDecision(${i})" style="background:none;border:none;cursor:pointer;color:#aaa;font-size:12px">×</button>
-      </div>`).join('')}
-    <input type="text" placeholder="Ajouter une décision…" style="width:100%;font-size:12px;padding:5px 8px;border:0.5px solid #D4CFC6;border-radius:8px;background:#fff;color:#2C1810;margin-top:6px;margin-bottom:12px" onkeydown="if(event.key==='Enter'&&this.value.trim()){addDecision(this.value.trim());this.value=''}" />
+    <div class="slabel">Mémoire — Décisions prises</div>
+    <div style="margin-bottom:10px">
+      ${(c.decisions||[]).map((d,i) => `
+        <div style="font-size:13px;padding:7px 0;border-bottom:0.5px solid #eee;display:flex;justify-content:space-between;align-items:center;gap:8px">
+          <span style="color:#0F6E56;font-weight:500">✓</span> <span style="flex:1">${esc(d)}</span>
+          <button onclick="removeDecision(${i})" style="background:none;border:none;cursor:pointer;color:#ccc;font-size:14px;line-height:1;padding:0 2px" title="Supprimer">×</button>
+        </div>`).join('') || '<div style="font-size:13px;color:#bbb;padding:6px 0">Aucune décision enregistrée</div>'}
+    </div>
+    <input type="text" placeholder="Nouvelle décision…" style="width:100%;font-size:13px;padding:8px 11px;border:0.5px solid #D4CFC6;border-radius:9px;background:#fff;color:#2C1810;margin-bottom:20px" onkeydown="if(event.key==='Enter'&&this.value.trim()){addDecision(this.value.trim());this.value=''}" />
 
-    <div style="font-size:11px;color:#aaa;margin-bottom:5px">Patterns</div>
-    ${(c.patterns||[]).map((p,i) => `
-      <div style="font-size:12px;padding:4px 0;border-bottom:0.5px solid #eee;display:flex;justify-content:space-between;align-items:center">
-        ◆ ${esc(p)}
-        <button onclick="removePattern(${i})" style="background:none;border:none;cursor:pointer;color:#aaa;font-size:12px">×</button>
-      </div>`).join('')}
-    <input type="text" placeholder="Ajouter un pattern…" style="width:100%;font-size:12px;padding:5px 8px;border:0.5px solid #D4CFC6;border-radius:8px;background:#fff;color:#2C1810;margin-top:6px;margin-bottom:14px" onkeydown="if(event.key==='Enter'&&this.value.trim()){addPattern(this.value.trim());this.value=''}" />
-
-    <div class="slabel">Mes protocoles custom <span class="proto-badge">2 max</span></div>
-    <div id="proto-list">${renderProtoList()}</div>
+    <div class="slabel">Mémoire — Patterns</div>
+    <div style="margin-bottom:10px">
+      ${(c.patterns||[]).map((p,i) => `
+        <div style="font-size:13px;padding:7px 0;border-bottom:0.5px solid #eee;display:flex;justify-content:space-between;align-items:center;gap:8px">
+          <span style="color:#6B1A2A;font-weight:500">◆</span> <span style="flex:1">${esc(p)}</span>
+          <button onclick="removePattern(${i})" style="background:none;border:none;cursor:pointer;color:#ccc;font-size:14px;line-height:1;padding:0 2px" title="Supprimer">×</button>
+        </div>`).join('') || '<div style="font-size:13px;color:#bbb;padding:6px 0">Aucun pattern enregistré</div>'}
+    </div>
+    <input type="text" placeholder="Nouveau pattern…" style="width:100%;font-size:13px;padding:8px 11px;border:0.5px solid #D4CFC6;border-radius:9px;background:#fff;color:#2C1810;margin-bottom:4px" onkeydown="if(event.key==='Enter'&&this.value.trim()){addPattern(this.value.trim());this.value=''}" />
 
     <div class="slabel" style="margin-top:14px">Lien client (permanent)</div>
     <div class="link-box">
       <div class="link-url">${esc(clientUrl)}</div>
       <button class="copy-btn" onclick="copyLink('${esc(clientUrl)}')">Copier</button>
     </div>
-
-    <div class="slabel" style="margin-top:14px">Aperçu prompt généré</div>
-    <div class="prompt-preview" id="prompt-preview"></div>
   </div>
 </div>`;
-  refreshPromptPreview();
 }
 
 // ── PROTOCOLES CUSTOM ──
@@ -426,8 +448,9 @@ function addPattern(v) { curClient.patterns = [...(curClient.patterns||[]), v]; 
 function removePattern(i) { curClient.patterns.splice(i,1); renderConfig(); }
 
 function refreshPromptPreview() {
-  const pp = document.getElementById('prompt-preview');
-  if (pp && curClient) pp.textContent = buildPrompt(curClient, curClient);
+  // supprimé — aperçu prompt retiré de l'interface
+  return;
+  if (false) { // dead code kept for safety
 }
 
 function copyLink(url) {
@@ -535,26 +558,44 @@ function addFeedMsg(role, data) {
   const m = document.createElement('div');
   if (role === 'user') {
     m.className = 'feed-msg feed-user';
-    m.innerHTML = `<div class="feed-meta">Client</div>${data.content}`;
+    m.innerHTML = `<div class="feed-meta">Client</div>${escHTML(data.content)}`;
   } else {
     m.className = 'feed-msg feed-ai';
-    let parsed; try { parsed = JSON.parse(data.content); } catch(e) { parsed = null; }
-    const protoKey = parsed?.proto || '';
+    // Nouveau format texte libre avec [PROTO:x] en fin de message
+    const raw = data.content || '';
+    const protoMatch = raw.match(/\[PROTO:([\w]+)\]/i);
+    const protoKey = (protoMatch ? protoMatch[1] : (data.proto || '')).toLowerCase();
+    const text = raw.replace(/\[PROTO:[\w]+\]/gi, '').trim();
+
     const isCustom = protoKey && !PC[protoKey];
     const tagClass = isCustom ? 'p-custom' : (PC[protoKey] || 'p-neutre');
     const tagLabel = isCustom ? protoKey.toUpperCase() : (PN[protoKey] || '—');
     const tag = `<span class="ptag-sm ${tagClass}">${tagLabel}</span>`;
-    let content = '';
-    if (parsed?.rephrase) content += `<em style="color:#888;font-size:12px">${parsed.rephrase}</em><br>`;
-    if (parsed?.reframe) content += parsed.reframe + '<br>';
-    if (parsed?.questions?.length) parsed.questions.forEach(q => content += `<strong>${q}</strong><br>`);
-    if (parsed?.micro) content += `<span style="color:#888;font-size:12px">→ ${parsed.micro}</span>`;
-    m.innerHTML = `<div class="feed-meta">Trust${tag}</div>${content || data.content}`;
+
+    // Rendu ligne par ligne : questions en gras, micro-actions en vert
+    const lines = text.split('\n').filter(l => l.trim());
+    let html = '';
+    lines.forEach(line => {
+      const t = line.trim();
+      if (t.endsWith('?')) {
+        html += `<strong>${escHTML(t)}</strong><br>`;
+      } else if (t.startsWith('→')) {
+        html += `<span style="color:#0F6E56;font-size:12px">${escHTML(t)}</span><br>`;
+      } else {
+        html += `${escHTML(t)}<br>`;
+      }
+    });
+
+    m.innerHTML = `<div class="feed-meta">Trust${tag}</div>${html || escHTML(raw)}`;
   }
   f.appendChild(m);
   f.scrollTop = f.scrollHeight;
   const empty = f.querySelector('[style*="En attente"]');
   if (empty) empty.remove();
+}
+
+function escHTML(str) {
+  return String(str || '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
 }
 
 // ── PROMPT (avec protocoles custom) ──
@@ -565,48 +606,45 @@ function buildPrompt(coach, client) {
   protos.forEach((p, i) => {
     if (!p.nom) return;
     const code = i === 0 ? 'P5' : 'P6';
-    customBlock += `\n${code} ${p.nom.toUpperCase()} (déclencheurs : ${p.declencheurs}) :
-Ton spécifique : ${p.ton}
-→ ${p.etapes.split('\n').filter(l=>l.trim()).join(' · ')}
-→ Action type : ${p.action_type}`;
+    customBlock += `\n${code} ${p.nom.toUpperCase()} (déclencheurs : ${p.declencheurs}) : ${p.etapes.split('\n').filter(l=>l.trim()).join(' · ')} — Ton : ${p.ton}`;
   });
 
   const customProtoValues = protos.filter(p=>p.nom).map((_,i) => i===0?'p5':'p6').join('|');
 
-  return `Tu es Trust, assistant de continuité de coaching entre les séances.
-Tu ne remplaces jamais le coach. Tu prolonges son travail avec rigueur.
+  return `Tu es Trust, un assistant de coaching entre les séances. Ton rôle : prolonger le travail du coach, pas le remplacer.
 
-PROFIL COACH (OBLIGATOIRE)
-Ton : ${coach.ton} | Posture : ${coach.posture} | Priorité : ${coach.priorite}
-Interdits : ${(coach.interdits||[]).join(", ") || "aucun"}
-Tu DOIS adapter ton style. Sinon → réponse incorrecte.
-
-CONTEXTE CLIENT (OBLIGATOIRE)
+CONTEXTE DE CETTE SESSION
 Objectif : ${client.objectif}
-Blocage : ${client.blocage}
-Décisions : ${(coach.decisions||[]).join(" / ") || "aucune"}
-Patterns : ${(coach.patterns||[]).join(" / ") || "aucun"}
-Tu DOIS utiliser ce contexte. Sinon → réponse incorrecte.
+Blocage déclaré : ${client.blocage}
+Décisions déjà prises : ${(client.decisions||[]).join(" / ") || "aucune"}
+Patterns connus : ${(client.patterns||[]).join(" / ") || "aucun"}
 
-MOTEUR TRUST — PROTOCOLES STRICTS
-P1 CLARIFICATION (confusion) : réduire à 2–3 options, forcer priorisation
-P2 PEUR (blocage émotionnel) : identifier peur réelle, séparer faits vs scénario
-P3 ACTION (procrastination) : identifier blocage exact, action < 10 min
-P4 CRISE (détresse forte) : ralentir, 1 seule question, recentrer présent${customBlock}
+STYLE DU COACH (adapte-toi strictement)
+Ton : ${coach.ton} | Posture : ${coach.posture} | Priorité : ${coach.priorite}
+Interdits absolus : ${(coach.interdits||[]).join(", ") || "aucun"}
 
-STRUCTURE IMPOSÉE
-1. Reformulation précise (sans empathie excessive)
-2. Recadrage si nécessaire
-3. 1 à 2 questions max
-4. 1 micro-action concrète
+PROTOCOLES — détecte lequel s'applique et indique-le en fin de réponse sous la forme [PROTO:x]
+P1 clarification — quand il y a confusion, flou, trop d'options : reformule en 2-3 options concrètes
+P2 peur — quand c'est un blocage émotionnel : sépare les faits du scénario imaginé
+P3 action — quand c'est de la procrastination : cherche le vrai blocage, propose une action < 10 min
+P4 crise — quand la détresse est forte : ralentis, une seule question, ramène au présent
+neutre — exploration, début de session, réponse peu chargée${customBlock}
+
+TON PAR SITUATION
+- Si la personne tourne en rond, se répète ou bullshite : direct, sans ménagement, coupe court
+- Si elle exprime une vraie vulnérabilité ou de l'émotion : chaleureux, humain, pas de solution immédiate
+- Si elle est dans l'analyse, la décision : neutre, factuel, miroir précis
 
 RÈGLES STRICTES
-- Max 5 lignes utiles | Pas de blabla | Pas de généralités
-- Ne jamais valider la passivité | Ne jamais entretenir la rumination
-- Ne jamais contredire les décisions prises
-
-FORMAT JSON strict uniquement :
-{"proto":"clarification|peur|action|crise|neutre${customProtoValues ? '|'+customProtoValues : ''}","rephrase":"1 ligne ou null","reframe":"1 ligne ou null","questions":["max 2"],"micro":"1 action concrète","rappel":"ou null","quality":{"concision":0-100,"action_orient":0-100,"anti_rumi":0-100}}`;
+- Réponds en texte naturel, comme si tu écrivais un message à quelqu'un que tu connais bien
+- Maximum 4-5 lignes. Zéro blabla, zéro généralités, zéro formules de coach Instagram
+- Pose une seule vraie question ouverte — jamais fermée (pas de "est-ce que", "as-tu", "peux-tu")
+- Si tu proposes une micro-action, commence la ligne par "→" — uniquement si c'est pertinent, pas systématique
+- Ne répète JAMAIS une question déjà posée dans cette conversation
+- Si le client répond "je ne sais pas" ou reste vague : change d'angle, passe en P2, ne pas insister
+- Ne valide jamais la passivité. Ne relance jamais la rumination.
+- Tutoie toujours.
+- Termine toujours par [PROTO:clarification|peur|action|crise|neutre${customProtoValues ? '|'+customProtoValues : ''}]`;
 }
 
 function sw(tab) {
