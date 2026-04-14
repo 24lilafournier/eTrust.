@@ -178,14 +178,23 @@ async function send() {
     const data = await res.json();
     const raw = data.content?.map(b => b.text || "").join("") || "";
 
+    // Parser le nouveau format texte libre avec balise [PROTO:x]
     let parsed;
-    try { parsed = JSON.parse(raw.replace(/```json|```/g, "").trim()); }
-    catch(e) { parsed = { proto:"neutre", rephrase:null, reframe:null, questions:[getFallback()], micro:null, rappel:null }; }
+    const protoMatch = raw.match(/\[PROTO:([\w]+)\]/i);
+    const proto = protoMatch ? protoMatch[1].toLowerCase() : 'neutre';
+    const text = raw.replace(/\[PROTO:[\w]+\]/gi, '').trim();
+
+    if (text) {
+      parsed = { text, proto };
+    } else {
+      // Fallback si réponse vide ou malformée
+      parsed = { text: getFallback(), proto: 'neutre' };
+    }
 
     removeLoading();
     renderMsg(parsed);
-    history.push({ role: "assistant", content: JSON.stringify(parsed) });
-    const { error: errAi } = await sb.from('messages').insert({ client_id: clientData.id, role: 'assistant', content: JSON.stringify(parsed), proto: parsed.proto });
+    history.push({ role: "assistant", content: raw });
+    const { error: errAi } = await sb.from('messages').insert({ client_id: clientData.id, role: 'assistant', content: raw, proto });
     if (errAi) console.error(errAi);
 
   } catch(e) {
@@ -199,13 +208,37 @@ async function send() {
 function renderMsg(p) {
   const d = document.getElementById('msgs');
   const m = document.createElement('div'); m.className = 'mai';
-  let h = '';
-  if (p.rappel) h += `<div class="rappel">${esc(p.rappel)}</div>`;
-  if (p.rephrase) h += `<div class="rephrase">${esc(p.rephrase)}</div>`;
-  if (p.reframe) h += `<div class="reframe">${esc(p.reframe)}</div>`;
-  if (p.questions?.length) p.questions.forEach(q => h += `<div class="q">${esc(q)}</div>`);
-  if (p.micro) h += `<div class="micro">${esc(p.micro)}</div>`;
-  m.innerHTML = h; d.appendChild(m); scroll();
+
+  // Nouveau format : p peut être { text: "...", proto: "..." } ou l'ancien format JSON
+  if (p.text) {
+    // Format texte libre : on convertit les sauts de ligne en <br>
+    // et on met en gras les questions (lignes finissant par ?)
+    const lines = p.text.split('\n').filter(l => l.trim());
+    let h = '';
+    if (p.rappel) h += `<div class="rappel">${esc(p.rappel)}</div>`;
+    lines.forEach(line => {
+      const trimmed = line.trim();
+      if (trimmed.endsWith('?')) {
+        h += `<div class="q">${esc(trimmed)}</div>`;
+      } else if (trimmed.startsWith('→')) {
+        h += `<div class="micro">${esc(trimmed.slice(1).trim())}</div>`;
+      } else {
+        h += `<div class="reframe">${esc(trimmed)}</div>`;
+      }
+    });
+    m.innerHTML = h;
+  } else {
+    // Fallback ancien format JSON (startSession initial)
+    let h = '';
+    if (p.rappel) h += `<div class="rappel">${esc(p.rappel)}</div>`;
+    if (p.rephrase) h += `<div class="rephrase">${esc(p.rephrase)}</div>`;
+    if (p.reframe) h += `<div class="reframe">${esc(p.reframe)}</div>`;
+    if (p.questions?.length) p.questions.forEach(q => h += `<div class="q">${esc(q)}</div>`);
+    if (p.micro) h += `<div class="micro">${esc(p.micro)}</div>`;
+    m.innerHTML = h;
+  }
+
+  d.appendChild(m); scroll();
 }
 
 function appendLoading() {
@@ -230,48 +263,51 @@ function buildPrompt() {
   coachProtocoles.forEach((p, i) => {
     if (!p.nom) return;
     const code = i === 0 ? 'P5' : 'P6';
-    customBlock += `\n${code} ${p.nom.toUpperCase()} (déclencheurs : ${p.declencheurs}) :
-Ton spécifique : ${p.ton}
-→ ${p.etapes.split('\n').filter(l=>l.trim()).join(' · ')}
-→ Action type : ${p.action_type}`;
+    customBlock += `\n${code} ${p.nom.toUpperCase()} (déclencheurs : ${p.declencheurs}) : ${p.etapes.split('\n').filter(l=>l.trim()).join(' · ')} — Ton : ${p.ton}`;
   });
 
   const customProtoValues = coachProtocoles.filter(p=>p.nom).map((_,i) => i===0?'p5':'p6').join('|');
 
-  return `Tu es Trust, assistant de continuité de coaching entre les séances.
-Tu ne remplaces jamais le coach. Tu prolonges son travail avec rigueur.
+  // Extraire les questions déjà posées pour anti-répétition
+  const alreadyAsked = history
+    .filter(m => m.role === 'assistant')
+    .map(m => m.content)
+    .join('\n');
 
-PROFIL COACH (OBLIGATOIRE)
-Ton : ${c.ton} | Posture : ${c.posture} | Priorité : ${c.priorite}
-Interdits : ${(c.interdits||[]).join(", ") || "aucun"}
-Tu DOIS adapter ton style. Sinon → réponse incorrecte.
+  return `Tu es Trust, un assistant de coaching entre les séances. Ton rôle : prolonger le travail du coach, pas le remplacer.
 
-CONTEXTE CLIENT (OBLIGATOIRE)
-Objectif déclaré : ${sessionCtx.objectif}
+CONTEXTE DE CETTE SESSION
+Objectif : ${sessionCtx.objectif}
 Blocage déclaré : ${sessionCtx.blocage}
-Décisions prises : ${(c.decisions||[]).join(" / ") || "aucune"}
+Décisions déjà prises : ${(c.decisions||[]).join(" / ") || "aucune"}
 Patterns connus : ${(c.patterns||[]).join(" / ") || "aucun"}
-Tu DOIS utiliser ce contexte. Sinon → réponse incorrecte.
 
-MOTEUR TRUST — PROTOCOLES STRICTS
-P1 CLARIFICATION (confusion) : réduire à 2–3 options, forcer priorisation
-P2 PEUR (blocage émotionnel) : identifier peur réelle, séparer faits vs scénario
-P3 ACTION (procrastination) : identifier blocage exact, action < 10 min
-P4 CRISE (détresse forte) : ralentir, 1 seule question, recentrer présent${customBlock}
+STYLE DU COACH (adapte-toi strictement)
+Ton : ${c.ton} | Posture : ${c.posture} | Priorité : ${c.priorite}
+Interdits absolus : ${(c.interdits||[]).join(", ") || "aucun"}
 
-STRUCTURE IMPOSÉE
-1. Reformulation précise (sans empathie excessive)
-2. Recadrage si nécessaire
-3. 1 à 2 questions max
-4. 1 micro-action concrète
+PROTOCOLES — détecte lequel s'applique et indique-le en fin de réponse sous la forme [PROTO:x]
+P1 clarification — quand il y a confusion, flou, trop d'options : reformule en 2-3 options concrètes
+P2 peur — quand c'est un blocage émotionnel : sépare les faits du scénario imaginé
+P3 action — quand c'est de la procrastination : cherche le vrai blocage, propose une action < 10 min
+P4 crise — quand la détresse est forte : ralentis, une seule question, ramène au présent
+neutre — exploration, début de session, réponse peu chargée${customBlock}
+
+TON PAR SITUATION
+- Si la personne tourne en rond, se répète ou bullshite : direct, sans ménagement, coupe court
+- Si elle exprime une vraie vulnérabilité ou de l'émotion : chaleureux, humain, pas de solution immédiate
+- Si elle est dans l'analyse, la décision : neutre, factuel, miroir précis
 
 RÈGLES STRICTES
-- Max 5 lignes utiles | Pas de blabla | Pas de généralités
-- Ne jamais valider la passivité | Ne jamais entretenir la rumination
-- Ne jamais contredire les décisions prises
-
-FORMAT JSON strict uniquement :
-{"proto":"clarification|peur|action|crise|neutre${customProtoValues ? '|'+customProtoValues : ''}","rephrase":"1 ligne ou null","reframe":"1 ligne ou null","questions":["max 2"],"micro":"1 action concrète","rappel":"ou null","quality":{"concision":0-100,"action_orient":0-100,"anti_rumi":0-100}}`;
+- Réponds en texte naturel, comme si tu écrivais un message à quelqu'un que tu connais bien
+- Maximum 4-5 lignes. Zéro blabla, zéro généralités, zéro formules de coach Instagram
+- Pose une seule vraie question ouverte — jamais fermée (pas de "est-ce que", "as-tu", "peux-tu")
+- Si tu proposes une micro-action, commence la ligne par "→" — uniquement si c'est pertinent, pas systématique
+- Ne répète JAMAIS une question déjà posée. Questions déjà posées dans cette session : ${alreadyAsked ? alreadyAsked.substring(0, 800) : "aucune"}
+- Si le client répond "je ne sais pas" ou reste vague : change d'angle, passe en P2, ne pas insister sur la même piste
+- Ne valide jamais la passivité. Ne relance jamais la rumination.
+- Tutoie toujours.
+- Termine toujours par [PROTO:clarification|peur|action|crise|neutre${customProtoValues ? '|'+customProtoValues : ''}]`;
 }
 
 init();
